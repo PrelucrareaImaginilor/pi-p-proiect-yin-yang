@@ -40,20 +40,20 @@ def balansare_copiere(json_file):
 
 def build_ann_model(input_shape, num_classes):
     model = tf.keras.models.Sequential([
-        tf.keras.layers.InputLayer(input_shape=input_shape),
-        tf.keras.layers.Rescaling(1.0 / 255),  # Normalize inputs to [0, 1]
-        tf.keras.layers.Dense(256, activation="relu"),
-        tf.keras.layers.Dropout(0.5),
+        tf.keras.layers.InputLayer(input_shape=input_shape), # dim de iesire
+        tf.keras.layers.Rescaling(1.0 / 255), # normalizam intrarile la [0,1]
+        tf.keras.layers.Dense(256, activation="relu"), # strat dens cu 256 noduri
+        tf.keras.layers.Dropout(0.5),# reducem overfitting prin omiterea unor noduri
         tf.keras.layers.Dense(128, activation="relu"),
         tf.keras.layers.Dropout(0.5),
         tf.keras.layers.Dense(64, activation="relu"),
         tf.keras.layers.Dropout(0.5),
-        tf.keras.layers.Dense(num_classes, activation="softmax")
+        tf.keras.layers.Dense(num_classes, activation="softmax") # strat de iesire
     ])
     
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=0.0005),  # Lowered learning rate
-        loss=tf.keras.losses.SparseCategoricalCrossentropy(),
+        optimizer=tf.keras.optimizers.Adam(learning_rate=0.0005), # adam cu rata de invatare mai mica
+        loss=tf.keras.losses.SparseCategoricalCrossentropy(), # fct pierdere pt clasificarea multiclasa
         metrics=["accuracy"]
     )
     return model
@@ -83,13 +83,13 @@ def main():
     history = model.fit(
         X_train, y_train,
         validation_data=(X_val, y_val),
-        epochs=150,
-        batch_size=16,
-        verbose=1
+        epochs=150, # nr mai mare de epoci
+        batch_size=16, # impartirea datelor
+        verbose=1 # progress antrenare
     )
 
     print("Testam modelul...")
-    y_pred = np.argmax(model.predict(X_test), axis=1)
+    y_pred = np.argmax(model.predict(X_test), axis=1) # etichetele pt datele de test
     print("PRECIZIE MODEL:", np.mean(y_pred == y_test))
 
     print("\nReport clasificare din sklearn:\n", classification_report(
@@ -103,6 +103,6 @@ def main():
     model.save("ModelAntrenat.h5") #todo: foloseste .keras
 
     cm = confusion_matrix(y_test, y_pred, labels=np.arange(len(class_names)))
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names) # randuri: clase reale, coloane: clase prezise
     disp.plot(cmap="viridis")
     plt.show()
