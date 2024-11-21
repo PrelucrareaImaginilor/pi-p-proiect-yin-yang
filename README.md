@@ -24,3 +24,5 @@ Această schemă bloc are următoarele componente:
 ## Descrierea proiectului
 
 Proiectul "Yin-Yang" se concentrează pe analiza scrisului de mână pentru a determina trăsături de personalitate. Inspirat din diverse lucrări și proiecte similare, folosește tehnici de preprocesare și segmentare a imaginilor pentru a extrage caracteristici relevante din scris. Obiectivul este de a crea o aplicație Python care să genereze un raport asupra personalității individului pe baza analizelor automate ale trăsăturilor de scris.
+
+Link pentru seturile de date pentru antrenare si testare a proiectului in faza curenta: https://drive.google.com/file/d/1jriCei9Cg1jEigRgYw4VZGIrUJFigvT8/view?usp=sharing
