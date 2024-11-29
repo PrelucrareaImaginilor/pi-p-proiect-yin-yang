@@ -1,0 +1,6 @@
+DateAntrenament/Agreeableness
+DateAntrenament/Conscientiousness
+DateAntrenament/Extraversion
+DateAntrenament/Neuroticism
+DateAntrenament/Openness
+IAM_Dataset/
