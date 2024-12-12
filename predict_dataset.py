@@ -3,15 +3,18 @@ import cv2
 import numpy as np
 import tensorflow as tf
 import json
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
 
 MODEL_PATH = "ModelAntrenat.h5"
 IAM_DATASET_PATH = "IAM_Dataset/lines"
 OUTPUT_JSON_PATH = "iam_predictions.json"
+OUTPUT_PDF_PATH = "iam_predictions.pdf"
 
 def preprocess_image(image_path, target_size=(7,)): # nr proprietati json
     image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
     if image is None:
-        print(f"Imagine invalidă: {image_path}")
+        print(f"Imagine invalida: {image_path}")
         return None
 
     # normalizare
@@ -34,7 +37,33 @@ def preprocess_image(image_path, target_size=(7,)): # nr proprietati json
     ]
     return np.array(features).reshape(1, -1) #date pt model
 
-def classify_images(model, iam_dataset_path, output_json_path):
+def save_results_to_pdf(results, output_pdf_path):
+    c = canvas.Canvas(output_pdf_path, pagesize=letter)
+    c.setFont("Helvetica", 10)
+
+    width, height = letter
+    y_position = height - 50
+
+    c.drawString(50, y_position, "Rezultatele clasificarii imaginilor")
+    y_position -= 20
+
+    for result in results:
+        if y_position < 50:  # pagina noua
+            c.showPage()
+            c.setFont("Helvetica", 10)
+            y_position = height - 50
+
+        c.drawString(50, y_position, f"Imagine: {result['file_path']}")
+        y_position -= 15
+        for trait, score in result["scores"].items():
+            c.drawString(70, y_position, f"{trait}: {score}")
+            y_position -= 15
+        y_position -= 10  # spatiu extra
+
+    c.save()
+    print(f"Rezultatele au fost salvate in PDF: {output_pdf_path}")
+
+def classify_images(model, iam_dataset_path, output_json_path, output_pdf_path):
     limit = 10
     curr = 0
     results = []
@@ -63,14 +92,19 @@ def classify_images(model, iam_dataset_path, output_json_path):
                     }
                 })
 
+    # json
     with open(output_json_path, "w") as f:
         json.dump(results, f, indent=4)
 
-    print(f"Rezultatele sunt salvate in {output_json_path}")
+    # pdf
+    save_results_to_pdf(results, output_pdf_path)
 
 def main():
     print("Incarcam modelul...")
     model = tf.keras.models.load_model(MODEL_PATH)
 
     print("Clasificam imaginile...")
-    classify_images(model, IAM_DATASET_PATH, OUTPUT_JSON_PATH)
+    classify_images(model, IAM_DATASET_PATH, OUTPUT_JSON_PATH, OUTPUT_PDF_PATH)
+
+if __name__ == "__main__":
+    main()
