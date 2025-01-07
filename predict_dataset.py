@@ -5,9 +5,10 @@ import tensorflow as tf
 import json
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
 
 MODEL_PATH = "ModelAntrenat.h5"
-IAM_DATASET_PATH = "IAM_Dataset/lines"
+IAM_DATASET_PATH = "IAM_Dataset\lines"
 OUTPUT_JSON_PATH = "iam_predictions.json"
 OUTPUT_PDF_PATH = "iam_predictions.pdf"
 
@@ -39,39 +40,55 @@ def preprocess_image(image_path, target_size=(7,)): # nr proprietati json
 
 def save_results_to_pdf(results, output_pdf_path):
     c = canvas.Canvas(output_pdf_path, pagesize=letter)
+    
+    c.setTitle("Rezultate - Detecția automată trăsăturilor de personalitate pe baza analizei de text scris de mână")
+    
     c.setFont("Helvetica", 10)
 
     width, height = letter
     y_position = height - 50
-
+    
+    c.setFont("Helvetica-Bold", 14)
     c.drawString(50, y_position, "Rezultatele clasificarii imaginilor")
-    y_position -= 20
+    c.setFont("Helvetica", 10)
+    y_position -= 50
 
     for result in results:
-        if y_position < 50:  # pagina noua
+        if y_position < 300:  # pagina noua
             c.showPage()
             c.setFont("Helvetica", 10)
             y_position = height - 50
-
+        
+        c.setFont("Helvetica-Bold", 10)
         c.drawString(50, y_position, f"Imagine: {result['file_path']}")
+        c.setFont("Helvetica", 10)
+        # afisam si imaginea !
+        try:
+            img = ImageReader(result['file_path'])
+            c.drawImage(img, 50, y_position - 160, width=300, height=150, preserveAspectRatio=True, mask='auto')
+            y_position -= 160
+        except Exception as e:
+            y_position -= 15
+            c.drawString(50, y_position, f"[Eroare la loading: {result['file_path']}]")
+            y_position -= 15
         y_position -= 15
         for trait, score in result["scores"].items():
             c.drawString(70, y_position, f"{trait}: {score}")
             y_position -= 15
-        y_position -= 10  # spatiu extra
+        y_position -= 60  # spatiu extra
 
     c.save()
     print(f"Rezultatele au fost salvate in PDF: {output_pdf_path}")
 
 def classify_images(model, iam_dataset_path, output_json_path, output_pdf_path):
-    limit = 10
+    limit = 0
     curr = 0
     results = []
     for root, _, files in os.walk(iam_dataset_path):
         for file in files:
             if file.endswith(".png") or file.endswith(".jpg"):
                 curr = curr + 1
-                if (curr > limit):
+                if (limit and curr > limit):
                     break
                 image_path = os.path.join(root, file)
                 features = preprocess_image(image_path)
